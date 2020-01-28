@@ -1,0 +1,35 @@
+server:
+  port: 8080
+spring:
+  profiles:
+    active: @spring.maven.profiles@
+  datasource:
+    hikari:
+      connectionTimeout: 20000
+      maximumPoolSize: 10
+  data:
+    rest:
+      base-path: /api
+security:
+  oauth2:
+    resource:
+      userInfoUri: https://api.github.com/user
+      preferTokenInfo: false
+service:
+  version: @project.version@
+  api:
+    version: 1.0
+logging:
+  level.ru.cbr.rrror: ERROR
+  level.org.springframework.security: ERROR
+  level.root: INFO
+
+---
+spring:
+  profiles: dev,test
+server:
+  port: 8081
+logging:
+  level.ru.cbr.rrror: DEBUG
+  level.org.springframework.security: ERROR
+  level.root: INFO

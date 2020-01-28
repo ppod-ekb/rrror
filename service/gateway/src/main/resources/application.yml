@@ -1,0 +1,63 @@
+server:
+  port: 8080
+
+spring:
+  profiles:
+    active: @spring.maven.profiles@
+  security:
+    oauth2:
+      client:
+        registration:
+          ppod:
+            registrationId: ppod
+            clientId: 630edf9c9ebf675e980c
+            clientSecret: c43d9bf9520a94529f283eb1ea90c3ae87208fed
+            redirect-uri: http://localhost:8080/login/oauth2/code/custom
+            scope: profile
+            authorization-grant-type: "authorization_code"
+            provider: ppod
+        provider:
+          ppod:
+            authorization-uri: https://github.com/login/oauth/authorize
+            token-uri: https://github.com/login/oauth/access_token
+            user-info-uri: https://api.github.com/user
+            user-name-attribute: login
+
+zuul:
+  sensitiveHeaders: Cookie,Set-Cookie
+  host:
+    socket-timeout-millis: 180000
+  routes:
+    db-service:
+      path: "/db-service/**"
+      url: ${DB_SERVICE_HOST:http://172.17.0.3:8080}
+      stripPrefix: true
+
+service:
+  version: @project.version@
+  api:
+    version: 1.0
+
+gateway:
+  websocket:
+    endpoint: "/db"
+  db-service:
+    url-prefix: "${GATEWAY_SERVICE_HOST:http://localhost:8080}/db-service"
+    websocket-message-prefix: "/topic"
+
+logging:
+  level.ru.cbr.rrror: DEBUG
+  level.org.springframework.security: ERROR
+  level.root: INFO
+
+---
+spring:
+  profiles: dev,test
+
+server:
+  port: 8080
+
+logging:
+  level.org.springframework.security: DEBUG
+  level.ru.cbr.rrror: DEBUG
+  level.root: INFO
