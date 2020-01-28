@@ -1,9 +1,9 @@
-package ru.cbr.rrror.service.gateway.event;
+package ru.cbr.rrror.service.gateway.config;
 
 import org.junit.Assert;
 import org.junit.Test;
 
-import static ru.cbr.rrror.service.gateway.event.DbServiceZuulFilterAction.HalHrefModifier;
+import static ru.cbr.rrror.service.gateway.config.ZuulFilterConfig.DbServiceZuulFilterAction.HalHrefModifier;
 
 public class DbServiceZuulFilterActionUnitTest {
 

@@ -30,7 +30,7 @@ zuul:
   routes:
     db-service:
       path: "/db-service/**"
-      url: ${DB_SERVICE_HOST:http://172.17.0.3:8080}
+      url: ${DB_SERVICE_HOST:http://localhost:8081}
       stripPrefix: true
 
 service:
