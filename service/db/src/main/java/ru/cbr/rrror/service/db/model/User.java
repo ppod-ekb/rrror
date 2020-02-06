@@ -2,44 +2,52 @@ package ru.cbr.rrror.service.db.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.*;
+import org.springframework.data.jpa.domain.AbstractPersistable;
 
 import javax.persistence.*;
-import java.util.Objects;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
 @Entity
-@Getter @Setter @ToString @NoArgsConstructor @AllArgsConstructor
-public class User {
+@AllArgsConstructor @NoArgsConstructor @Data
+@EqualsAndHashCode(exclude = {"groups", "role"})
+public class User extends AbstractPersistable<Long> {
 
-    private @Id @GeneratedValue Long id;
     private String login;
-    private String firstName;
-    private String lastName;
+    @Embedded
+    private Name name;
     private String description;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    private Role role;
+
+    @ManyToMany(cascade = CascadeType.PERSIST)
+    @JoinTable(name = "user_group",
+               joinColumns = @JoinColumn(name = "group_id", referencedColumnName = "id"),
+               inverseJoinColumns = @JoinColumn(name = "user_id", referencedColumnName = "id"))
+    final private List<Group> groups = new ArrayList<>();
 
     private @Version @JsonIgnore Long version;
 
-    public User(String login, String firstName, String lastName, String description) {
+    public User(String login, Name name, String description) {
         this.login = login;
-        this.firstName = firstName;
-        this.lastName = lastName;
+        this.name = name;
         this.description = description;
     }
 
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        User u = (User) o;
-        return Objects.equals(id, u.id) &&
-                Objects.equals(firstName, u.firstName) &&
-                Objects.equals(lastName, u.lastName) &&
-                Objects.equals(description, u.description) &&
-                Objects.equals(version, u.version);
+    public User withRole(Role role) {
+        this.role = role;
+        return this;
     }
 
-    @Override
-    public int hashCode() {
+    public User withGroups(Group... groups) {
+        this.groups.addAll(Arrays.asList(groups));
+        return this;
+    }
 
-        return Objects.hash(id, firstName, lastName, description, version);
+    public User withGroup(Group group) {
+        this.groups.add(group);
+        return this;
     }
 }

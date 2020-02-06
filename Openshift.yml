@@ -1,17 +1,14 @@
 kind: Template
 apiVersion: v1
 metadata:
-  name: turing
+  name: rrror
 
 parameters:
-  - name: INFODIOD_SERVICE
-    value: "http://infodiod-service-route.turing.svc:8080"
+  - name: GATEWAY_SERVICE_ROOT
+    value: "http://gateway-service.rrror.svc:8080"
     required: true
-  - name: INFODIOD_SERVICE_HOST
-    value: "infodiod-service-route.turing.svc:8080"
-    required: true
-  - name: TURING_DUMP_PVC_MOUNT_PATH
-    value: "/mnt/turing/dump/volume"
+  - name: DB_SERVICE_HOST
+    value: "http://db-service.rrror.svc:8080"
     required: true
   - name: CURRENT_ZONE
     value: "DEV | TEST"
@@ -19,177 +16,99 @@ parameters:
 
 
 objects:
-# ========================== INFODIOD-SERVICE ==========================
+# ========================== DB-SERVICE ==========================
   - kind: DeploymentConfig
     apiVersion: v1
     metadata:
-      name: infodiod-service
+      name: db-service-deployment
       annotations:
         template.alpha.openshift.io/wait-for-ready: "true"
     spec:
       replicas: 1
       selector:
-        deploymentconfig: infodiod-service
+        deploymentconfig: db-service-deployment
       strategy:
         type: Recreate
       template:
         metadata:
           labels:
-            deploymentconfig: infodiod-service
+            deploymentconfig: db-service-deployment
         spec:
           containers:
-            - image: "172.30.1.1:5000/turing/infodiod:0.0.2"
+            - image: "172.30.1.1:5000/rrror/db-service:1.0.0"
               imagePullPolicy: Always
-              name: infodiod
+              name: rrror-db
               ports:
                 - containerPort: 8080
                   protocol: TCP
-              volumeMounts:
-                - mountPath: "${TURING_DUMP_PVC_MOUNT_PATH}"
-                  name: "turing-dump-pv"
               env:
-                - name: TURING_DUMP_PVC_MOUNT_PATH
-                  value: ${TURING_DUMP_PVC_MOUNT_PATH}
                 - name: CURRENT_ZONE
                   value: ${CURRENT_ZONE}
-          volumes:
-            - name: "turing-dump-pv"
-              persistentVolumeClaim:
-                claimName: "turing-dump-pvc"
     restartPolicy: Always
   - kind: Service
     apiVersion: v1
     metadata:
-      name: infodiod-service-route
+      name: db-service
     spec:
       ports:
         - port: 8080
           protocol: TCP
           targetPort: 8080
       selector:
-        deploymentconfig: infodiod-service
+        deploymentconfig: db-service-deployment
       type: ClusterIP
-# ========================== ODUMP-SERVICE ==========================
+# ========================== GATEWAY-SERVICE ==========================
   - kind: DeploymentConfig
     apiVersion: v1
     metadata:
-      name: odump-service
+      name: gateway-service-deployment
       annotations:
         template.alpha.openshift.io/wait-for-ready: "true"
     spec:
       replicas: 1
       selector:
-        deploymentconfig: odump-service
+        deploymentconfig: gateway-service-deployment
       strategy:
         type: Recreate
       template:
         metadata:
           labels:
-            deploymentconfig: odump-service
+            deploymentconfig: gateway-service-deployment
         spec:
           containers:
-            - image: "172.30.1.1:5000/turing/odump:0.0.4"
+            - image: "172.30.1.1:5000/rrror/gateway:1.0.0"
               imagePullPolicy: Always
-              name: odump
+              name: rrror-gateway
               ports:
                 - containerPort: 8080
                   protocol: TCP
-              volumeMounts:
-                - mountPath: "${TURING_DUMP_PVC_MOUNT_PATH}"
-                  name: "turing-dump-pv"
               env:
                 - name: CURRENT_ZONE
                   value: ${CURRENT_ZONE}
-                - name: INFODIOD_SERVICE
-                  value: ${INFODIOD_SERVICE}
-                - name: TURING_DUMP_PVC_MOUNT_PATH
-                  value: ${TURING_DUMP_PVC_MOUNT_PATH}
-          volumes:
-            - name: "turing-dump-pv"
-              persistentVolumeClaim:
-                claimName: "turing-dump-pvc"
+                - name: GATEWAY_SERVICE_ROOT
+                  value: ${GATEWAY_SERVICE_ROOT}
+                - name: DB_SERVICE_HOST
+                  value: ${DB_SERVICE_HOST}
     restartPolicy: Always
   - kind: Service
     apiVersion: v1
     metadata:
-      name: odump-service-route
+      name: gateway-service
     spec:
       ports:
         - port: 8080
           protocol: TCP
           targetPort: 8080
       selector:
-        deploymentconfig: odump-service
+        deploymentconfig: gateway-service-deployment
       type: ClusterIP
 
   - kind: Route
     apiVersion: v1
     metadata:
-      name: odump
-      namespace: turing
+      name: gateway
+      namespace: rrror
     spec:
       to:
         kind: Service
-        name: odump-service-route
-
-  # ========================== PGDUMP-SERVICE ==========================
-  - kind: DeploymentConfig
-    apiVersion: v1
-    metadata:
-      name: pgdump-service
-      annotations:
-        template.alpha.openshift.io/wait-for-ready: "true"
-    spec:
-      replicas: 1
-      selector:
-        deploymentconfig: pgdump-service
-      strategy:
-        type: Recreate
-      template:
-        metadata:
-          labels:
-            deploymentconfig: pgdump-service
-        spec:
-          containers:
-            - image: "172.30.1.1:5000/turing/pgdump-service:0.0.1"
-              imagePullPolicy: Always
-              name: odump
-              ports:
-                - containerPort: 8080
-                  protocol: TCP
-              volumeMounts:
-                - mountPath: "${TURING_DUMP_PVC_MOUNT_PATH}"
-                  name: "turing-dump-pv"
-              env:
-                - name: INFODIOD_SERVICE_HOST
-                  value: ${INFODIOD_SERVICE_HOST}
-                - name: TURING_DUMP_PVC_MOUNT_PATH
-                  value: ${TURING_DUMP_PVC_MOUNT_PATH}
-          volumes:
-            - name: "turing-dump-pv"
-              persistentVolumeClaim:
-                claimName: "turing-dump-pvc"
-    restartPolicy: Always
-
-  - kind: Service
-    apiVersion: v1
-    metadata:
-      name: pgdump-service-route
-    spec:
-      ports:
-        - port: 8080
-          protocol: TCP
-          targetPort: 8080
-      selector:
-        deploymentconfig: pgdump-service
-      type: ClusterIP
-
-  - kind: Route
-    apiVersion: v1
-    metadata:
-      name: pgdump
-      namespace: turing
-    spec:
-      to:
-        kind: Service
-        name: pgdump-service-route
+        name: gateway-service

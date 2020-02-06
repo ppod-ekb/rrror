@@ -42,7 +42,7 @@ gateway:
   websocket:
     endpoint: "/db"
   db-service:
-    url-prefix: "${GATEWAY_SERVICE_HOST:http://localhost:8080}/db-service"
+    url-prefix: "${GATEWAY_SERVICE_ROOT:http://localhost:8080}/db-service"
     websocket-message-prefix: "/topic"
 
 logging:

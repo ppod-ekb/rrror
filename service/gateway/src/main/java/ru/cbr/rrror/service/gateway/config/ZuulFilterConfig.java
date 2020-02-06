@@ -78,10 +78,10 @@ public class ZuulFilterConfig {
             }
         };
     }
-    
+
     @Slf4j
     @AllArgsConstructor
-    public static class DbServiceZuulFilterAction {
+    static class DbServiceZuulFilterAction {
 
         private final SimpMessagingTemplate websocket;
         private final ApplicationConfig.Config config;

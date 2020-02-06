@@ -1,0 +1,15 @@
+server:
+  port: 8080
+spring:
+  profiles:
+    active: @spring.maven.profiles@
+
+---
+spring:
+  profiles: dev,test
+server:
+  port: 8082
+logging:
+  level.ru.cbr.rrror: DEBUG
+  level.org.springframework.security: ERROR
+  level.root: INFO
